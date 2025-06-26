@@ -11,13 +11,15 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "expo": "^53.0.12",
     "expo-status-bar": "~2.2.3",
     "nativewind": "latest",
     "react": "19.0.0",
     "react-native": "0.79.4",
     "react-native-reanimated": "~3.17.4",
-    "react-native-safe-area-context": "5.4.0"
+    "react-native-safe-area-context": "5.4.0",
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

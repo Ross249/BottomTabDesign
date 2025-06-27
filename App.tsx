@@ -1,61 +1,29 @@
 import { useState } from 'react';
-import { StatusBar } from 'expo-status-bar';
 import { Text, View, Button, TextInput, StyleSheet } from 'react-native';
-import { useAuthStore } from './components/authStore';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import ErrorBoundary from 'react-native-error-boundary';
 
 import './global.css';
+import { NavigationContainer } from '@react-navigation/native';
+import { ErrorFallback } from 'components/ErrorFallback';
+import { errorHandler } from 'utils/errorHandler';
+import TabStack from 'navigation/TabStack';
 
 export default function App() {
-  const { token, setToken, clearToken } = useAuthStore();
-  const [tokenInput, setTokenInput] = useState('');
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Zustand Auth Token Example</Text>
-      <Text>Current Token:</Text>
-      <Text style={styles.token}>{token || 'No token set'}</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Enter a new token"
-        value={tokenInput}
-        onChangeText={setTokenInput}
-      />
-      <Button title="Set Token" onPress={() => setToken(tokenInput)} />
-      <View style={styles.separator} />
-      <Button title="Clear Token" onPress={clearToken} color="red" />
-
-      <StatusBar style="auto" />
-    </View>
+    <ErrorBoundary
+      FallbackComponent={ErrorFallback}
+      onError={(error, stackTrace) => {
+        // Enhanced error handling with detailed reporting
+        errorHandler.handleBoundaryError(error, { stackTrace });
+      }}>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <TabStack />
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  token: {
-    marginBottom: 20,
-    fontFamily: 'monospace',
-  },
-  input: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginBottom: 10,
-    paddingHorizontal: 10,
-    width: '80%',
-  },
-  separator: {
-    marginVertical: 10,
-  },
-});
+const styles = StyleSheet.create({});

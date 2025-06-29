@@ -3,12 +3,18 @@ import React from 'react';
 
 const ProfileScreen = () => {
   return (
-    <View>
-      <Text>index</Text>
+    <View style={styles.container}>
+      <Text>Profile</Text>
     </View>
   );
 };
 
 export default ProfileScreen;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+    paddingTop: 36,
+  },
+});

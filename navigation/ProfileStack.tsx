@@ -8,7 +8,7 @@ export const ProfileStack = () => {
       screenOptions={{
         headerShown: false,
       }}>
-      <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="UserInfo" component={ProfileScreen} />
     </Stack.Navigator>
   );
 };

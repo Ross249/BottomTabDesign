@@ -4,10 +4,8 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  withTiming,
-  interpolate,
-  FadeInRight,
-  FadeOutLeft,
+  FadeIn,
+  FadeOut,
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
@@ -18,21 +16,38 @@ const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpaci
 
 const CustomBottomTab: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
   const insets = useSafeAreaInsets();
-  const tabWidth = (width - 60) / state.routes.length; // 60 for padding
-  const translateX = useSharedValue(0);
 
+  // Calculate dynamic width for tabs to fill the container
+  const containerPadding = 32; // 16px on each side
+  const totalTabs = state.routes.length;
+  const tabMargins = 4 * totalTabs; // 2px margin on each side per tab
+  const availableWidth = width - 60 - containerPadding - tabMargins; // Account for margins
+  const baseTabWidth = availableWidth / totalTabs;
+
+  const getTabWidth = (index: number) => {
+    return baseTabWidth; // All tabs have equal width now
+  };
+
+  // Create animated width values for each tab at the top level
+  const tabWidth0 = useSharedValue(44);
+  const tabWidth1 = useSharedValue(44);
+  const tabWidth2 = useSharedValue(44);
+  const tabWidths = [tabWidth0, tabWidth1, tabWidth2];
+
+  // Update animated widths when active tab changes
   React.useEffect(() => {
-    // Account for the container's left padding (10px) to center the indicator
-    const indicatorPosition = 10 + state.index * tabWidth;
-    translateX.value = withSpring(indicatorPosition, {
-      damping: 20,
-      stiffness: 200,
-    });
-  }, [state.index, tabWidth]);
+    state.routes.forEach((_, index) => {
+      if (tabWidths[index]) {
+        const isActive = state.index === index;
+        const targetWidth = isActive ? getTabWidth(index) : 44;
 
-  const animatedIndicatorStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-  }));
+        tabWidths[index].value = withSpring(targetWidth, {
+          damping: 20,
+          stiffness: 200,
+        });
+      }
+    });
+  }, [state.index]);
 
   const getTabIcon = (routeName: string) => {
     switch (routeName) {
@@ -63,11 +78,6 @@ const CustomBottomTab: React.FC<BottomTabBarProps> = ({ state, descriptors, navi
   return (
     <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       <View style={styles.tabContainer}>
-        {/* Animated background indicator */}
-        <Animated.View
-          style={[styles.activeIndicator, { width: tabWidth }, animatedIndicatorStyle]}
-        />
-
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
           const isFocused = state.index === index;
@@ -100,19 +110,39 @@ const CustomBottomTab: React.FC<BottomTabBarProps> = ({ state, descriptors, navi
               testID={`tab-${route.name}`}
               onPress={onPress}
               onLongPress={onLongPress}
-              style={[styles.tab, { width: tabWidth }]}
+              style={[
+                styles.tab,
+                {
+                  width: tabWidths[index] ? tabWidths[index] : 44, // Use animated width
+                  height: 44, // Fixed height for perfect circles
+                  backgroundColor: isFocused ? '#000000' : 'transparent', // Black background for active
+                  borderWidth: isFocused ? 0 : 1.5,
+                  borderColor: isFocused ? 'transparent' : '#cccccc',
+                  borderRadius: 22, // Always circular/pill shape
+                  marginHorizontal: 2,
+                },
+              ]}
               activeOpacity={0.7}>
-              <View style={styles.tabContent}>
-                <Ionicons
-                  name={getTabIcon(route.name) as any}
-                  size={22}
-                  color={isFocused ? '#000000' : '#ffffff'}
-                />
+              <View
+                style={[
+                  styles.tabContent,
+                  {
+                    paddingHorizontal: isFocused ? 8 : 0,
+                    paddingVertical: isFocused ? 0 : 0,
+                  },
+                ]}>
+                <Animated.View key={`${route.key}-${isFocused}`} entering={FadeIn.duration(200)}>
+                  <Ionicons
+                    name={getTabIcon(route.name) as any}
+                    size={20}
+                    color={isFocused ? '#ffffff' : '#cccccc'}
+                  />
+                </Animated.View>
                 {isFocused && (
                   <Animated.Text
-                    style={[styles.tabLabel, { color: isFocused ? '#000000' : '#ffffff' }]}
-                    entering={FadeInRight.duration(200)}
-                    exiting={FadeOutLeft.duration(150)}>
+                    style={[styles.tabLabel]}
+                    entering={FadeIn.delay(150).duration(200)}
+                    exiting={FadeOut.duration(150)}>
                     {getTabLabel(route.name)}
                   </Animated.Text>
                 )}
@@ -135,34 +165,19 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#1a1a1a',
+    backgroundColor: 'transparent',
     borderRadius: 25,
     paddingVertical: 8,
-    paddingHorizontal: 10,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
     position: 'relative',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  activeIndicator: {
-    position: 'absolute',
-    top: 8,
-    bottom: 8,
-    left: 0,
-    backgroundColor: '#ffffff',
-    borderRadius: 18,
-    zIndex: 1,
   },
   tab: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    zIndex: 2,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
   },
   tabContent: {
     flexDirection: 'row',
@@ -173,6 +188,7 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 12,
     fontWeight: '600',
+    color: '#ffffff',
     textAlign: 'center',
   },
 });

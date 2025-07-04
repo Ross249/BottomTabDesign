@@ -5,3 +5,7 @@
 # Packy Bottom Tab
 
 ![Packy Bottom Tab](./assets/packy_bottom_tab.png)
+
+# glow bottom tab
+
+![glow bottom tab](./assets/glowing_bottom_tab.png)
